@@ -1361,65 +1361,83 @@ button[type="submit"]#chat-send-btn:active {
   justify-content: center;
 }
 
-/* Float Lobby Card and Timer Card in the Bottom-Right Corner of Game Panel (Desktop - Extra Compact) */
-.tournament-lobby-card, .tournament-timer-card {
+/* Float Lobby Card in the Top-Left Corner of Game Panel (Desktop - Extremely Compact) */
+.tournament-lobby-card {
   position: absolute;
-  bottom: 15px;
+  top: 15px;
+  left: 15px;
+  margin: 0;
+  z-index: 100;
+  width: 190px;
+  padding: 10px !important;
+  border-radius: 10px !important;
+  background: rgba(16, 18, 27, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(127, 86, 243, 0.3) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Float Timer HUD in the Top-Right Corner of Game Panel (Desktop - Boxless HUD) */
+.tournament-timer-card {
+  position: absolute;
+  top: 15px;
   right: 15px;
   margin: 0;
   z-index: 100;
-  width: 230px; /* Reduced from 280px */
-  padding: 12px !important; /* Reduced from 20px */
-  border-radius: 12px !important;
-  background: radial-gradient(circle at center, rgba(16, 18, 27, 0.98) 0%, rgba(8, 9, 13, 0.99) 100%) !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(127, 86, 243, 0.25) !important;
-  border-color: rgba(127, 86, 243, 0.3);
+  width: 180px;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  text-align: right !important;
 }
 
 /* Make Lobby elements compact on desktop */
 .tournament-lobby-card .lobby-countdown {
-  font-size: 24px !important;
-  margin-bottom: 10px !important;
+  font-size: 20px !important;
+  margin-bottom: 8px !important;
 }
 
 .tournament-lobby-card .lobby-slots {
-  gap: 6px !important;
-  margin-bottom: 12px !important;
+  gap: 4px !important;
+  margin-bottom: 8px !important;
 }
 
 .tournament-lobby-card .lobby-slot {
-  padding: 6px 4px !important;
-  min-height: 60px !important;
-  border-radius: 8px !important;
+  padding: 4px 2px !important;
+  min-height: 48px !important;
+  border-radius: 6px !important;
 }
 
 .tournament-lobby-card .slot-number {
-  width: 16px !important;
-  height: 16px !important;
-  font-size: 9px !important;
-  margin-bottom: 4px !important;
+  width: 14px !important;
+  height: 14px !important;
+  font-size: 8px !important;
+  margin-bottom: 2px !important;
 }
 
 .tournament-lobby-card .slot-username {
-  font-size: 9px !important;
-  max-width: 60px !important;
+  font-size: 8px !important;
+  max-width: 48px !important;
 }
 
 .tournament-lobby-card .btn-join-lobby {
-  font-size: 12px !important;
-  padding: 8px 16px !important;
-  border-radius: 8px !important;
+  font-size: 10px !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
 }
 
 /* Make Timer Card elements compact on desktop */
 .tournament-timer-card .timer-countdown {
-  font-size: 24px !important;
-  margin-bottom: 4px !important;
+  font-size: 28px !important;
+  margin-bottom: 2px !important;
+  text-shadow: 0 0 10px rgba(243, 85, 136, 0.8) !important;
 }
 
 .tournament-timer-card .timer-participant-status {
-  font-size: 10px !important;
-  margin-bottom: 8px !important;
+  font-size: 9px !important;
+  margin-bottom: 6px !important;
 }
 
 .tournament-timer-card .timer-scores-preview {
@@ -1429,24 +1447,33 @@ button[type="submit"]#chat-send-btn:active {
 .tournament-timer-card .tournament-live-leaderboard {
   margin-top: 8px !important;
   padding-top: 6px !important;
+  border-top: 1px solid rgba(243, 85, 136, 0.15) !important;
+  text-align: right !important;
 }
 
 .tournament-timer-card .live-leaderboard-title {
-  font-size: 9px !important;
+  font-size: 8px !important;
   margin-bottom: 4px !important;
 }
 
 .tournament-timer-card #tournament-live-list {
-  gap: 3px !important;
+  gap: 2px !important;
+  align-items: flex-end !important;
 }
 
 .tournament-timer-card #tournament-live-list li {
-  font-size: 11px !important;
-  padding: 3px 6px !important;
+  font-size: 10px !important;
+  padding: 1px 0 !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
 }
 
 .tournament-timer-card #tournament-live-list li .live-name {
-  max-width: 100px !important;
+  max-width: 90px !important;
+  text-align: right !important;
 }
 
 /* Hide header and footer in game panel when tournament-mode is active (Immersion/Clean view) */
@@ -1470,6 +1497,10 @@ button[type="submit"]#chat-send-btn:active {
     margin: 16px auto;
     padding: 20px !important; /* Restore normal padding on mobile */
     border-radius: 16px !important;
+    background: radial-gradient(circle at center, rgba(16, 18, 27, 0.95) 0%, rgba(10, 11, 16, 0.98) 100%) !important;
+    border: 1px solid rgba(127, 86, 243, 0.4) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(127, 86, 243, 0.25) !important;
+    text-align: center !important;
   }
   
   .tournament-lobby-card .lobby-countdown {
@@ -1523,6 +1554,8 @@ button[type="submit"]#chat-send-btn:active {
   .tournament-timer-card .tournament-live-leaderboard {
     margin-top: 14px !important;
     padding-top: 10px !important;
+    border-top: 1px solid rgba(243, 85, 136, 0.2) !important;
+    text-align: left !important;
   }
 
   .tournament-timer-card .live-leaderboard-title {
@@ -1532,15 +1565,21 @@ button[type="submit"]#chat-send-btn:active {
 
   .tournament-timer-card #tournament-live-list {
     gap: 4px !important;
+    align-items: stretch !important;
   }
 
   .tournament-timer-card #tournament-live-list li {
     font-size: 12px !important;
     padding: 4px 8px !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.03) !important;
+    border-radius: 6px !important;
+    justify-content: space-between !important;
   }
 
   .tournament-timer-card #tournament-live-list li .live-name {
     max-width: 140px !important;
+    text-align: left !important;
   }
 }
 
