@@ -36,8 +36,13 @@
 
         <!-- Admin Dashboard Bar -->
         <div id="admin-action-bar" class="admin-action-bar hidden animate-fade-in">
-            <span class="admin-bar-title">🛡️ Admin Console:</span>
-            <button id="admin-start-tournament-btn" class="btn-admin-action">Mulai Turnamen 1 Menit</button>
+            <span class="admin-bar-title">🛡️ Admin Console: Mode Moderasi Aktif. Anda dapat menghapus data pemain dari leaderboard dan menarik pesan chat.</span>
+        </div>
+
+        <!-- Public Tournament Bar -->
+        <div id="tournament-action-bar" class="tournament-action-bar animate-fade-in">
+            <span class="tournament-bar-title">🏆 Turnamen Matchmaking:</span>
+            <button id="open-lobby-btn" class="btn-tournament-action">Buka Lobby Turnamen</button>
         </div>
 
         <!-- Main Workspace -->
@@ -80,13 +85,41 @@
                     </div>
                 </div>
 
+                <!-- Tournament Lobby Card -->
+                <div id="tournament-lobby-card" class="tournament-lobby-card hidden">
+                    <div class="lobby-badge">LOBBY MATCHMAKING</div>
+                    <div id="lobby-countdown" class="lobby-countdown">15s</div>
+                    <div class="lobby-slots">
+                        <div class="lobby-slot" data-slot="1">
+                            <span class="slot-number">1</span>
+                            <span class="slot-username">Kosong</span>
+                        </div>
+                        <div class="lobby-slot" data-slot="2">
+                            <span class="slot-number">2</span>
+                            <span class="slot-username">Kosong</span>
+                        </div>
+                        <div class="lobby-slot" data-slot="3">
+                            <span class="slot-number">3</span>
+                            <span class="slot-username">Kosong</span>
+                        </div>
+                    </div>
+                    <button id="join-lobby-btn" class="btn-join-lobby">Gabung Turnamen</button>
+                </div>
+
                 <!-- Tournament Active Countdown Card -->
                 <div id="tournament-timer-card" class="tournament-timer-card hidden">
                     <div class="timer-badge">TOURNAMENT ACTIVE</div>
                     <div id="tournament-countdown" class="timer-countdown">60s</div>
+                    <div id="tournament-participant-status" class="timer-participant-status">Menonton Turnamen</div>
                     <div class="timer-scores-preview">
                         <span class="score-preview-label">Your Tournament Score: </span>
                         <span id="my-tournament-score" class="score-preview-val">0</span>
+                    </div>
+                    <div class="tournament-live-leaderboard">
+                        <div class="live-leaderboard-title">Skor Turnamen Real-Time:</div>
+                        <ul id="tournament-live-list">
+                            <!-- Dynamic real-time participant scores -->
+                        </ul>
                     </div>
                 </div>
 

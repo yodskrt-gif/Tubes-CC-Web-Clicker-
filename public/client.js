@@ -21,7 +21,15 @@ const adminPasswordInput = document.getElementById('admin-password-input');
 const adminCloseBtn = document.getElementById('admin-close-btn');
 const adminTrigger = document.getElementById('admin-trigger');
 const adminActionBar = document.getElementById('admin-action-bar');
-const adminStartTournamentBtn = document.getElementById('admin-start-tournament-btn');
+
+// Tournament Matchmaking & Score DOM Elements
+const tournamentActionBar = document.getElementById('tournament-action-bar');
+const openLobbyBtn = document.getElementById('open-lobby-btn');
+const tournamentLobbyCard = document.getElementById('tournament-lobby-card');
+const lobbyCountdown = document.getElementById('lobby-countdown');
+const joinLobbyBtn = document.getElementById('join-lobby-btn');
+const tournamentParticipantStatus = document.getElementById('tournament-participant-status');
+const tournamentLiveList = document.getElementById('tournament-live-list');
 
 // Hall of Fame & Tournament DOM
 const hallOfFameBox = document.getElementById('hall-of-fame');
@@ -39,7 +47,10 @@ let adminPassword = '';
 let lastRanks = {}; // username -> rank index (0-based) for animations
 
 // Tournament Client State
+let isLobbyActive = false;
 let isTournamentRunning = false;
+let isParticipant = false;
+let lobbyParticipants = [];
 let myTournamentClicks = 0;
 
 // Admin Session Check
@@ -113,9 +124,13 @@ adminForm.addEventListener('submit', (e) => {
   location.reload(); // Reload to redraw interface with delete buttons
 });
 
-// Admin Start Tournament Trigger
-adminStartTournamentBtn.addEventListener('click', () => {
-  socket.emit('adminStartTournament', adminPassword);
+// Public Tournament Lobby Trigger
+openLobbyBtn.addEventListener('click', () => {
+  socket.emit('openTournamentLobby');
+});
+
+joinLobbyBtn.addEventListener('click', () => {
+  socket.emit('joinTournamentLobby');
 });
 
 // Socket Events
@@ -140,13 +155,63 @@ socket.on('init', (data) => {
   // Render last winner to Hall of Fame
   updateHallOfFameUI(data.lastWinner);
 
+  // Sync lobby state
+  if (data.lobbyState && data.lobbyState.isActive) {
+    isLobbyActive = true;
+    tournamentLobbyCard.classList.remove('hidden');
+    lobbyCountdown.textContent = `${data.lobbyState.timeLeft}s`;
+    updateLobbyUI(data.lobbyState.participants);
+
+    tournamentActionBar.classList.add('lobby-active');
+    openLobbyBtn.disabled = true;
+    openLobbyBtn.textContent = 'Lobby Sedang Dibuka...';
+  } else {
+    tournamentLobbyCard.classList.add('hidden');
+  }
+
   // Sync tournament state
   if (data.tournamentState && data.tournamentState.isActive) {
     isTournamentRunning = true;
     tournamentTimerCard.classList.remove('hidden');
     tournamentCountdown.textContent = `${data.tournamentState.timeLeft}s`;
-    myTournamentClicks = 0;
-    myTournamentScore.textContent = '0';
+    
+    // Status (Participant vs Spectator)
+    const isMeIn = data.tournamentState.participants.includes(myUsername);
+    isParticipant = isMeIn;
+    
+    if (isMeIn) {
+      tournamentParticipantStatus.textContent = 'Anda terdaftar sebagai peserta!';
+      tournamentParticipantStatus.style.color = 'var(--color-cyan)';
+      document.querySelector('.timer-scores-preview').style.display = 'block';
+    } else {
+      tournamentParticipantStatus.textContent = 'Menonton Turnamen (Anda tidak terdaftar)';
+      tournamentParticipantStatus.style.color = 'var(--text-secondary)';
+      document.querySelector('.timer-scores-preview').style.display = 'none';
+    }
+
+    // Sync live list
+    tournamentLiveList.innerHTML = '';
+    const scores = data.tournamentState.scores || {};
+    data.tournamentState.participants.forEach(p => {
+      const isSelf = p === myUsername;
+      const score = scores[p] || 0;
+      if (isSelf) {
+        myTournamentClicks = score;
+        myTournamentScore.textContent = myTournamentClicks;
+      }
+      const li = document.createElement('li');
+      li.className = isSelf ? 'live-item-self' : 'live-item';
+      li.innerHTML = `<span class="live-name">${escapeHTML(p)}${isSelf ? ' (Anda)' : ''}</span>: <span class="live-score">${score}</span>`;
+      tournamentLiveList.appendChild(li);
+    });
+
+    tournamentActionBar.classList.add('tournament-active');
+    openLobbyBtn.disabled = true;
+    openLobbyBtn.textContent = 'Turnamen Sedang Berjalan...';
+  } else {
+    if (!isLobbyActive) {
+      tournamentTimerCard.classList.add('hidden');
+    }
   }
 
   // Update local score from server database state if available
@@ -200,22 +265,105 @@ socket.on('adminError', (err) => {
   location.reload();
 });
 
+// Lobby Sockets
+socket.on('lobbyOpened', (data) => {
+  isLobbyActive = true;
+  isTournamentRunning = false;
+
+  tournamentLobbyCard.classList.remove('hidden');
+  tournamentTimerCard.classList.add('hidden');
+
+  lobbyCountdown.textContent = `${data.timeLeft}s`;
+  updateLobbyUI(data.participants);
+
+  tournamentActionBar.classList.add('lobby-active');
+  tournamentActionBar.classList.remove('tournament-active');
+  openLobbyBtn.disabled = true;
+  openLobbyBtn.textContent = 'Lobby Sedang Dibuka...';
+});
+
+socket.on('lobbyTick', (timeLeft) => {
+  lobbyCountdown.textContent = `${timeLeft}s`;
+});
+
+socket.on('lobbyUpdate', (participants) => {
+  updateLobbyUI(participants);
+});
+
+socket.on('lobbyCanceled', (message) => {
+  alert(message);
+  resetTournamentUI();
+});
+
+socket.on('tournamentError', (err) => {
+  alert(err);
+});
+
 // Tournament Sockets
-socket.on('tournamentStart', (timeLeft) => {
+socket.on('tournamentStart', (data) => {
+  isLobbyActive = false;
   isTournamentRunning = true;
   myTournamentClicks = 0;
   myTournamentScore.textContent = '0';
+
+  tournamentLobbyCard.classList.add('hidden');
   tournamentTimerCard.classList.remove('hidden');
-  tournamentCountdown.textContent = `${timeLeft}s`;
+
+  tournamentCountdown.textContent = `${data.timeLeft}s`;
+
+  // Status (Participant vs Spectator)
+  const isMeIn = data.participants.includes(myUsername);
+  isParticipant = isMeIn;
+  
+  if (isMeIn) {
+    tournamentParticipantStatus.textContent = 'Anda terdaftar sebagai peserta!';
+    tournamentParticipantStatus.style.color = 'var(--color-cyan)';
+    document.querySelector('.timer-scores-preview').style.display = 'block';
+  } else {
+    tournamentParticipantStatus.textContent = 'Menonton Turnamen (Anda tidak terdaftar)';
+    tournamentParticipantStatus.style.color = 'var(--text-secondary)';
+    document.querySelector('.timer-scores-preview').style.display = 'none';
+  }
+
+  // Reset live scoreboard list
+  tournamentLiveList.innerHTML = '';
+  data.participants.forEach(p => {
+    const isSelf = p === myUsername;
+    const li = document.createElement('li');
+    li.id = `live-score-${p}`;
+    li.className = isSelf ? 'live-item-self' : 'live-item';
+    li.innerHTML = `<span class="live-name">${escapeHTML(p)}${isSelf ? ' (Anda)' : ''}</span>: <span class="live-score">0</span>`;
+    tournamentLiveList.appendChild(li);
+  });
+
+  tournamentActionBar.classList.remove('lobby-active');
+  tournamentActionBar.classList.add('tournament-active');
+  openLobbyBtn.disabled = true;
+  openLobbyBtn.textContent = 'Turnamen Sedang Berjalan...';
 });
 
 socket.on('tournamentTick', (timeLeft) => {
   tournamentCountdown.textContent = `${timeLeft}s`;
 });
 
+socket.on('tournamentScoresUpdate', (scores) => {
+  const sorted = Object.entries(scores)
+    .map(([username, score]) => ({ username, score }))
+    .sort((a, b) => b.score - a.score);
+
+  tournamentLiveList.innerHTML = '';
+  sorted.forEach(({ username, score }) => {
+    const isMe = username === myUsername;
+    const li = document.createElement('li');
+    li.className = isMe ? 'live-item-self' : 'live-item';
+    li.innerHTML = `<span class="live-name">${escapeHTML(username)}${isMe ? ' (Anda)' : ''}</span>: <span class="live-score">${score}</span>`;
+    tournamentLiveList.appendChild(li);
+  });
+});
+
 socket.on('tournamentEnd', (winner) => {
   isTournamentRunning = false;
-  tournamentTimerCard.classList.add('hidden');
+  resetTournamentUI();
 
   if (winner) {
     alert(`🏆 Turnamen Selesai!\nPemenangnya adalah: "${winner.username}" dengan ${winner.score} klik dalam 1 menit!`);
@@ -225,6 +373,54 @@ socket.on('tournamentEnd', (winner) => {
   }
 });
 
+// UI Reset & Lobby Helpers
+function resetTournamentUI() {
+  isLobbyActive = false;
+  isTournamentRunning = false;
+  isParticipant = false;
+  lobbyParticipants = [];
+  myTournamentClicks = 0;
+
+  tournamentLobbyCard.classList.add('hidden');
+  tournamentTimerCard.classList.add('hidden');
+
+  tournamentActionBar.classList.remove('lobby-active');
+  tournamentActionBar.classList.remove('tournament-active');
+  openLobbyBtn.disabled = false;
+  openLobbyBtn.textContent = 'Buka Lobby Turnamen';
+}
+
+function updateLobbyUI(participants) {
+  lobbyParticipants = participants;
+  isParticipant = participants.includes(myUsername);
+
+  for (let i = 1; i <= 3; i++) {
+    const slotEl = document.querySelector(`.lobby-slot[data-slot="${i}"]`);
+    if (!slotEl) continue;
+    const nameEl = slotEl.querySelector('.slot-username');
+    if (!nameEl) continue;
+    
+    if (i <= participants.length) {
+      slotEl.classList.add('occupied');
+      nameEl.textContent = participants[i - 1];
+    } else {
+      slotEl.classList.remove('occupied');
+      nameEl.textContent = 'Kosong';
+    }
+  }
+
+  if (isParticipant) {
+    joinLobbyBtn.disabled = true;
+    joinLobbyBtn.textContent = 'Sudah Bergabung';
+  } else if (participants.length >= 3) {
+    joinLobbyBtn.disabled = true;
+    joinLobbyBtn.textContent = 'Lobby Penuh';
+  } else {
+    joinLobbyBtn.disabled = false;
+    joinLobbyBtn.textContent = 'Gabung Turnamen';
+  }
+}
+
 // Core Tap/Click Logic
 quantumCore.addEventListener('click', (e) => {
   if (!myUsername) return;
@@ -233,8 +429,8 @@ quantumCore.addEventListener('click', (e) => {
   localClicks++;
   playerScore.textContent = localClicks;
 
-  // If tournament is active, increment local tournament score
-  if (isTournamentRunning) {
+  // If tournament is active and player is a participant, increment local tournament score
+  if (isTournamentRunning && isParticipant) {
     myTournamentClicks++;
     myTournamentScore.textContent = myTournamentClicks;
   }

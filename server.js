@@ -70,10 +70,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Active connections tracker
 const onlineUsers = new Map(); // socket.id -> username
 
-// Tournament state memory
+// Matchmaking Lobby & Tournament state variables
+let isLobbyActive = false;
+let lobbyTimeLeft = 0;
+let tournamentParticipants = []; // array of usernames (max 3)
+let lobbyInterval = null;
+
 let isTournamentActive = false;
 let tournamentTimeLeft = 0;
-let tournamentScores = {}; // username -> clicks in current tournament
+let tournamentScores = {}; // username -> clicks in tournament
 let tournamentInterval = null;
 
 function getLeaderboard() {
@@ -93,7 +98,8 @@ io.on('connection', (socket) => {
     chatHistory: db.chatHistory.slice(-50), // Send last 50 messages
     onlineCount: io.engine.clientsCount,
     lastWinner: db.lastWinner,
-    tournamentState: { isActive: isTournamentActive, timeLeft: tournamentTimeLeft }
+    lobbyState: { isActive: isLobbyActive, timeLeft: lobbyTimeLeft, participants: tournamentParticipants },
+    tournamentState: { isActive: isTournamentActive, timeLeft: tournamentTimeLeft, participants: tournamentParticipants, scores: tournamentScores }
   });
 
   // Broadcast online count to all clients
@@ -141,8 +147,8 @@ io.on('connection', (socket) => {
     db.leaderboard[username] = (db.leaderboard[username] || 0) + 1;
     isDirty = true;
 
-    // Track score on tournament if active
-    if (isTournamentActive) {
+    // Track score on tournament if active and player is registered as a participant
+    if (isTournamentActive && tournamentParticipants.includes(username)) {
       tournamentScores[username] = (tournamentScores[username] || 0) + 1;
       io.emit('tournamentScoresUpdate', tournamentScores);
     }
@@ -232,30 +238,26 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Handle Admin Start Click Tournament (1 Minute)
-  socket.on('adminStartTournament', (password) => {
-    if (password !== (process.env.ADMIN_PASSWORD || 'admin123')) {
-      socket.emit('adminError', 'Password admin salah!');
-      return;
-    }
-    if (isTournamentActive) {
-      socket.emit('adminError', 'Turnamen sedang berjalan!');
+  // Handle Public Open Tournament Lobby (15s matchmaking)
+  socket.on('openTournamentLobby', () => {
+    if (isTournamentActive || isLobbyActive) {
+      socket.emit('tournamentError', 'Turnamen atau Lobby sedang berjalan!');
       return;
     }
 
-    isTournamentActive = true;
-    tournamentTimeLeft = 60;
-    tournamentScores = {};
+    isLobbyActive = true;
+    lobbyTimeLeft = 15;
+    tournamentParticipants = [];
     isDirty = true;
 
-    // Broadcast tournament start
-    io.emit('tournamentStart', tournamentTimeLeft);
+    // Broadcast lobby opened to all clients
+    io.emit('lobbyOpened', { timeLeft: lobbyTimeLeft, participants: tournamentParticipants });
 
-    // Broadcast system message
+    // Broadcast system message to chat
     const systemMsg = {
       id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
       username: 'System',
-      message: '🚨 Turnamen Klik 1 Menit TELAH DIMULAI! Klik secepat mungkin! 🚨',
+      message: '📢 Lobby turnamen klik dibuka! Silakan gabung (maksimal 3 pemain). 📢',
       timestamp: Date.now(),
       isSystem: true
     };
@@ -263,63 +265,66 @@ io.on('connection', (socket) => {
     if (db.chatHistory.length > 100) db.chatHistory.shift();
     io.emit('chatMessage', systemMsg);
 
-    // Interval countdown
-    tournamentInterval = setInterval(() => {
-      tournamentTimeLeft--;
-      io.emit('tournamentTick', tournamentTimeLeft);
+    // Lobby Interval timer
+    lobbyInterval = setInterval(() => {
+      lobbyTimeLeft--;
+      io.emit('lobbyTick', lobbyTimeLeft);
 
-      if (tournamentTimeLeft <= 0) {
-        clearInterval(tournamentInterval);
-        isTournamentActive = false;
+      if (lobbyTimeLeft <= 0) {
+        clearInterval(lobbyInterval);
+        isLobbyActive = false;
 
-        // Determine winner
-        let winnerName = null;
-        let highestScore = 0;
-
-        Object.entries(tournamentScores).forEach(([username, score]) => {
-          if (score > highestScore) {
-            highestScore = score;
-            winnerName = username;
-          }
-        });
-
-        if (winnerName) {
-          db.lastWinner = {
-            username: winnerName,
-            score: highestScore,
-            timestamp: Date.now()
-          };
-          isDirty = true;
-
-          io.emit('tournamentEnd', db.lastWinner);
-
-          // Broadcast system winner chat msg
-          const winMsg = {
-            id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-            username: 'System',
-            message: `🏆 Turnamen Selesai! Pemenangnya adalah "${winnerName}" dengan ${highestScore} klik dalam 1 menit!`,
-            timestamp: Date.now(),
-            isSystem: true
-          };
-          db.chatHistory.push(winMsg);
-          if (db.chatHistory.length > 100) db.chatHistory.shift();
-          io.emit('chatMessage', winMsg);
+        // Verify if we have at least 2 players
+        if (tournamentParticipants.length >= 2) {
+          startTournament();
         } else {
-          io.emit('tournamentEnd', null);
-
-          const winMsg = {
+          // Canceled due to insufficient players
+          io.emit('lobbyCanceled', 'Lobby dibatalkan karena kekurangan pemain (minimal 2 pemain).');
+          tournamentParticipants = [];
+          
+          const systemMsg = {
             id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
             username: 'System',
-            message: '⏱️ Turnamen Selesai! Tidak ada pemenang karena tidak ada klik selama turnamen.',
+            message: '⏱️ Turnamen dibatalkan karena jumlah peserta kurang dari 2.',
             timestamp: Date.now(),
             isSystem: true
           };
-          db.chatHistory.push(winMsg);
+          db.chatHistory.push(systemMsg);
           if (db.chatHistory.length > 100) db.chatHistory.shift();
-          io.emit('chatMessage', winMsg);
+          io.emit('chatMessage', systemMsg);
         }
       }
     }, 1000);
+  });
+
+  // Handle Public Join Tournament Lobby
+  socket.on('joinTournamentLobby', () => {
+    const username = onlineUsers.get(socket.id);
+    if (!username) return;
+
+    if (!isLobbyActive) {
+      socket.emit('tournamentError', 'Lobby pendaftaran belum dibuka!');
+      return;
+    }
+
+    if (tournamentParticipants.includes(username)) {
+      return; // Already registered
+    }
+
+    if (tournamentParticipants.length >= 3) {
+      socket.emit('tournamentError', 'Lobby sudah penuh (maksimal 3 pemain)!');
+      return;
+    }
+
+    tournamentParticipants.push(username);
+    io.emit('lobbyUpdate', tournamentParticipants);
+
+    // Matchmaking Capped: If reaches 3 players, start tournament immediately!
+    if (tournamentParticipants.length === 3) {
+      clearInterval(lobbyInterval);
+      isLobbyActive = false;
+      startTournament();
+    }
   });
 
   // Handle Disconnect
@@ -346,6 +351,92 @@ io.on('connection', (socket) => {
     io.emit('onlineCount', io.engine.clientsCount);
   });
 });
+
+function startTournament() {
+  isTournamentActive = true;
+  tournamentTimeLeft = 60;
+  tournamentScores = {};
+  
+  // Set starting scores
+  tournamentParticipants.forEach(p => {
+    tournamentScores[p] = 0;
+  });
+  isDirty = true;
+
+  io.emit('tournamentStart', { timeLeft: tournamentTimeLeft, participants: tournamentParticipants });
+
+  // Broadcast system message
+  const systemMsg = {
+    id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+    username: 'System',
+    message: `🚨 Turnamen Klik Dimulai! Peserta: ${tournamentParticipants.join(', ')}. Klik secepat mungkin! 🚨`,
+    timestamp: Date.now(),
+    isSystem: true
+  };
+  db.chatHistory.push(systemMsg);
+  if (db.chatHistory.length > 100) db.chatHistory.shift();
+  io.emit('chatMessage', systemMsg);
+
+  // Tournament countdown timer
+  tournamentInterval = setInterval(() => {
+    tournamentTimeLeft--;
+    io.emit('tournamentTick', tournamentTimeLeft);
+
+    if (tournamentTimeLeft <= 0) {
+      clearInterval(tournamentInterval);
+      isTournamentActive = false;
+
+      // Determine winner among participants
+      let winnerName = null;
+      let highestScore = 0;
+
+      Object.entries(tournamentScores).forEach(([username, score]) => {
+        if (score > highestScore) {
+          highestScore = score;
+          winnerName = username;
+        }
+      });
+
+      if (winnerName) {
+        db.lastWinner = {
+          username: winnerName,
+          score: highestScore,
+          timestamp: Date.now()
+        };
+        isDirty = true;
+
+        io.emit('tournamentEnd', db.lastWinner);
+
+        const winMsg = {
+          id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          username: 'System',
+          message: `🏆 Turnamen Selesai! Pemenangnya adalah "${winnerName}" dengan ${highestScore} klik dalam 1 menit!`,
+          timestamp: Date.now(),
+          isSystem: true
+        };
+        db.chatHistory.push(winMsg);
+        if (db.chatHistory.length > 100) db.chatHistory.shift();
+        io.emit('chatMessage', winMsg);
+      } else {
+        io.emit('tournamentEnd', null);
+
+        const winMsg = {
+          id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          username: 'System',
+          message: '⏱️ Turnamen Selesai! Tidak ada pemenang karena tidak ada yang mengklik.',
+          timestamp: Date.now(),
+          isSystem: true
+        };
+        db.chatHistory.push(winMsg);
+        if (db.chatHistory.length > 100) db.chatHistory.shift();
+        io.emit('chatMessage', winMsg);
+      }
+
+      // Reset participants list
+      tournamentParticipants = [];
+    }
+  }, 1000);
+}
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
