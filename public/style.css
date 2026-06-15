@@ -328,11 +328,11 @@ body {
 }
 
 .welcome-text {
-  font-size: 13px;
+  font-size: 10px;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 12px;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
 }
 
 .welcome-text span {
