@@ -34,6 +34,12 @@
             </div>
         </header>
 
+        <!-- Admin Dashboard Bar -->
+        <div id="admin-action-bar" class="admin-action-bar hidden animate-fade-in">
+            <span class="admin-bar-title">🛡️ Admin Console:</span>
+            <button id="admin-start-tournament-btn" class="btn-admin-action">Mulai Turnamen 1 Menit</button>
+        </div>
+
         <!-- Main Workspace -->
         <main class="app-main">
             <!-- Left Panel: Leaderboard -->
@@ -43,6 +49,16 @@
                     <span class="badge">TOP 10</span>
                 </div>
                 <div class="panel-body">
+                    <!-- Hall of Fame Podium Winner -->
+                    <div id="hall-of-fame" class="hall-of-fame-box">
+                        <div class="hof-crown">👑</div>
+                        <div class="hof-details">
+                            <span class="hof-title">LAST CHAMPION</span>
+                            <span id="hof-winner-name" class="hof-winner">No Winner Yet</span>
+                            <span id="hof-winner-score" class="hof-score">0 Clicks</span>
+                        </div>
+                    </div>
+
                     <ol id="leaderboard-list">
                         <!-- Dynamic list items will be injected here -->
                     </ol>
@@ -52,10 +68,25 @@
             <!-- Center Panel: Clicker Game -->
             <section class="panel game-panel animate-fade-in">
                 <div class="game-info">
-                    <p class="welcome-text">Connected as: <span id="player-display-name">Connecting...</span></p>
+                    <div class="player-header-info">
+                        <p class="welcome-text">Connected as: <span id="player-display-name">Connecting...</span></p>
+                        <button id="logout-btn" class="logout-btn" title="Keluar Game" aria-label="Log Out">
+                            <svg viewBox="0 0 24 24" class="logout-icon"><path fill="currentColor" d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                        </button>
+                    </div>
                     <div class="score-container">
                         <span class="score-label">Clicker Charge</span>
                         <h2 id="player-score">0</h2>
+                    </div>
+                </div>
+
+                <!-- Tournament Active Countdown Card -->
+                <div id="tournament-timer-card" class="tournament-timer-card hidden">
+                    <div class="timer-badge">TOURNAMENT ACTIVE</div>
+                    <div id="tournament-countdown" class="timer-countdown">60s</div>
+                    <div class="timer-scores-preview">
+                        <span class="score-preview-label">Your Tournament Score: </span>
+                        <span id="my-tournament-score" class="score-preview-val">0</span>
                     </div>
                 </div>
 

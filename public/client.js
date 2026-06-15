@@ -12,6 +12,7 @@ const leaderboardList = document.getElementById('leaderboard-list');
 const chatMessages = document.getElementById('chat-messages');
 const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('chat-input');
+const logoutBtn = document.getElementById('logout-btn');
 
 // Admin DOM Elements
 const adminModal = document.getElementById('admin-modal');
@@ -19,6 +20,16 @@ const adminForm = document.getElementById('admin-form');
 const adminPasswordInput = document.getElementById('admin-password-input');
 const adminCloseBtn = document.getElementById('admin-close-btn');
 const adminTrigger = document.getElementById('admin-trigger');
+const adminActionBar = document.getElementById('admin-action-bar');
+const adminStartTournamentBtn = document.getElementById('admin-start-tournament-btn');
+
+// Hall of Fame & Tournament DOM
+const hallOfFameBox = document.getElementById('hall-of-fame');
+const hofWinnerName = document.getElementById('hof-winner-name');
+const hofWinnerScore = document.getElementById('hof-winner-score');
+const tournamentTimerCard = document.getElementById('tournament-timer-card');
+const tournamentCountdown = document.getElementById('tournament-countdown');
+const myTournamentScore = document.getElementById('my-tournament-score');
 
 // State
 let myUsername = localStorage.getItem('quantum_username') || '';
@@ -27,11 +38,16 @@ let isAdmin = false;
 let adminPassword = '';
 let lastRanks = {}; // username -> rank index (0-based) for animations
 
+// Tournament Client State
+let isTournamentRunning = false;
+let myTournamentClicks = 0;
+
 // Admin Session Check
 adminPassword = localStorage.getItem('admin_password') || '';
 if (adminPassword) {
   isAdmin = true;
   adminTrigger.classList.add('active');
+  adminActionBar.classList.remove('hidden');
 }
 
 // Connect to network or show register modal
@@ -56,6 +72,16 @@ usernameForm.addEventListener('submit', (e) => {
   }
 });
 
+// Logout Handler
+logoutBtn.addEventListener('click', () => {
+  if (confirm('Apakah Anda yakin ingin keluar dan berganti akun?')) {
+    localStorage.removeItem('quantum_username');
+    // We can also clear admin password to be safe
+    localStorage.removeItem('admin_password');
+    location.reload();
+  }
+});
+
 // Admin Panel Toggle
 adminTrigger.addEventListener('click', () => {
   if (isAdmin) {
@@ -64,6 +90,7 @@ adminTrigger.addEventListener('click', () => {
     adminPassword = '';
     localStorage.removeItem('admin_password');
     adminTrigger.classList.remove('active');
+    adminActionBar.classList.add('hidden');
     location.reload(); // Reload to strip delete actions
   } else {
     adminModal.classList.remove('hidden');
@@ -80,9 +107,15 @@ adminForm.addEventListener('submit', (e) => {
   localStorage.setItem('admin_password', adminPassword);
   isAdmin = true;
   adminTrigger.classList.add('active');
+  adminActionBar.classList.remove('hidden');
   adminModal.classList.add('hidden');
   adminPasswordInput.value = '';
   location.reload(); // Reload to redraw interface with delete buttons
+});
+
+// Admin Start Tournament Trigger
+adminStartTournamentBtn.addEventListener('click', () => {
+  socket.emit('adminStartTournament', adminPassword);
 });
 
 // Socket Events
@@ -103,6 +136,18 @@ socket.on('init', (data) => {
 
   // Set online count
   userCount.textContent = data.onlineCount;
+
+  // Render last winner to Hall of Fame
+  updateHallOfFameUI(data.lastWinner);
+
+  // Sync tournament state
+  if (data.tournamentState && data.tournamentState.isActive) {
+    isTournamentRunning = true;
+    tournamentTimerCard.classList.remove('hidden');
+    tournamentCountdown.textContent = `${data.tournamentState.timeLeft}s`;
+    myTournamentClicks = 0;
+    myTournamentScore.textContent = '0';
+  }
 
   // Update local score from server database state if available
   const myRecord = data.leaderboard.find(p => p.username === myUsername);
@@ -151,16 +196,48 @@ socket.on('adminError', (err) => {
   adminPassword = '';
   localStorage.removeItem('admin_password');
   adminTrigger.classList.remove('active');
+  adminActionBar.classList.add('hidden');
   location.reload();
+});
+
+// Tournament Sockets
+socket.on('tournamentStart', (timeLeft) => {
+  isTournamentRunning = true;
+  myTournamentClicks = 0;
+  myTournamentScore.textContent = '0';
+  tournamentTimerCard.classList.remove('hidden');
+  tournamentCountdown.textContent = `${timeLeft}s`;
+});
+
+socket.on('tournamentTick', (timeLeft) => {
+  tournamentCountdown.textContent = `${timeLeft}s`;
+});
+
+socket.on('tournamentEnd', (winner) => {
+  isTournamentRunning = false;
+  tournamentTimerCard.classList.add('hidden');
+
+  if (winner) {
+    alert(`🏆 Turnamen Selesai!\nPemenangnya adalah: "${winner.username}" dengan ${winner.score} klik dalam 1 menit!`);
+    updateHallOfFameUI(winner);
+  } else {
+    alert('⏱️ Turnamen Selesai!\nTidak ada yang mengklik selama turnamen berlangsung.');
+  }
 });
 
 // Core Tap/Click Logic
 quantumCore.addEventListener('click', (e) => {
   if (!myUsername) return;
 
-  // Instant local visual feedback
+  // Instant local visual feedback for global score
   localClicks++;
   playerScore.textContent = localClicks;
+
+  // If tournament is active, increment local tournament score
+  if (isTournamentRunning) {
+    myTournamentClicks++;
+    myTournamentScore.textContent = myTournamentClicks;
+  }
 
   // Emit event to Node.js backend container
   socket.emit('click');
@@ -232,6 +309,16 @@ function updateLeaderboardUI(list) {
   list.forEach((item, index) => {
     lastRanks[item.username] = index;
   });
+}
+
+function updateHallOfFameUI(winner) {
+  if (winner) {
+    hofWinnerName.textContent = winner.username;
+    hofWinnerScore.textContent = `${winner.score} Clicks (60s)`;
+  } else {
+    hofWinnerName.textContent = 'Belum Ada Juara';
+    hofWinnerScore.textContent = 'Mulai turnamen untuk bersaing!';
+  }
 }
 
 function appendChatMessage(msg) {

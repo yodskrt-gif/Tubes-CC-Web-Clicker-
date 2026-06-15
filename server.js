@@ -20,7 +20,8 @@ if (!fs.existsSync(DATA_DIR)) {
 // State
 let db = {
   leaderboard: {}, // username -> score
-  chatHistory: []  // array of { username, message, timestamp, isSystem }
+  chatHistory: [], // array of { id, username, message, timestamp, isSystem }
+  lastWinner: null // { username, score, timestamp }
 };
 
 // Load database
@@ -30,6 +31,7 @@ if (fs.existsSync(DATA_FILE)) {
     db = JSON.parse(rawData);
     if (!db.leaderboard) db.leaderboard = {};
     if (!db.chatHistory) db.chatHistory = [];
+    if (db.lastWinner === undefined) db.lastWinner = null;
   } catch (error) {
     console.error('Error loading database, resetting to default:', error);
   }
@@ -68,6 +70,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Active connections tracker
 const onlineUsers = new Map(); // socket.id -> username
 
+// Tournament state memory
+let isTournamentActive = false;
+let tournamentTimeLeft = 0;
+let tournamentScores = {}; // username -> clicks in current tournament
+let tournamentInterval = null;
+
 function getLeaderboard() {
   // Sort leaderboard descending and return top 10
   return Object.entries(db.leaderboard)
@@ -83,7 +91,9 @@ io.on('connection', (socket) => {
   socket.emit('init', {
     leaderboard: getLeaderboard(),
     chatHistory: db.chatHistory.slice(-50), // Send last 50 messages
-    onlineCount: io.engine.clientsCount
+    onlineCount: io.engine.clientsCount,
+    lastWinner: db.lastWinner,
+    tournamentState: { isActive: isTournamentActive, timeLeft: tournamentTimeLeft }
   });
 
   // Broadcast online count to all clients
@@ -130,6 +140,12 @@ io.on('connection', (socket) => {
     // Increment click count
     db.leaderboard[username] = (db.leaderboard[username] || 0) + 1;
     isDirty = true;
+
+    // Track score on tournament if active
+    if (isTournamentActive) {
+      tournamentScores[username] = (tournamentScores[username] || 0) + 1;
+      io.emit('tournamentScoresUpdate', tournamentScores);
+    }
 
     // Send immediate update to all users
     io.emit('leaderboardUpdate', getLeaderboard());
@@ -214,6 +230,96 @@ io.on('connection', (socket) => {
       if (db.chatHistory.length > 100) db.chatHistory.shift();
       io.emit('chatMessage', systemMsg);
     }
+  });
+
+  // Handle Admin Start Click Tournament (1 Minute)
+  socket.on('adminStartTournament', (password) => {
+    if (password !== (process.env.ADMIN_PASSWORD || 'admin123')) {
+      socket.emit('adminError', 'Password admin salah!');
+      return;
+    }
+    if (isTournamentActive) {
+      socket.emit('adminError', 'Turnamen sedang berjalan!');
+      return;
+    }
+
+    isTournamentActive = true;
+    tournamentTimeLeft = 60;
+    tournamentScores = {};
+    isDirty = true;
+
+    // Broadcast tournament start
+    io.emit('tournamentStart', tournamentTimeLeft);
+
+    // Broadcast system message
+    const systemMsg = {
+      id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+      username: 'System',
+      message: '🚨 Turnamen Klik 1 Menit TELAH DIMULAI! Klik secepat mungkin! 🚨',
+      timestamp: Date.now(),
+      isSystem: true
+    };
+    db.chatHistory.push(systemMsg);
+    if (db.chatHistory.length > 100) db.chatHistory.shift();
+    io.emit('chatMessage', systemMsg);
+
+    // Interval countdown
+    tournamentInterval = setInterval(() => {
+      tournamentTimeLeft--;
+      io.emit('tournamentTick', tournamentTimeLeft);
+
+      if (tournamentTimeLeft <= 0) {
+        clearInterval(tournamentInterval);
+        isTournamentActive = false;
+
+        // Determine winner
+        let winnerName = null;
+        let highestScore = 0;
+
+        Object.entries(tournamentScores).forEach(([username, score]) => {
+          if (score > highestScore) {
+            highestScore = score;
+            winnerName = username;
+          }
+        });
+
+        if (winnerName) {
+          db.lastWinner = {
+            username: winnerName,
+            score: highestScore,
+            timestamp: Date.now()
+          };
+          isDirty = true;
+
+          io.emit('tournamentEnd', db.lastWinner);
+
+          // Broadcast system winner chat msg
+          const winMsg = {
+            id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            username: 'System',
+            message: `🏆 Turnamen Selesai! Pemenangnya adalah "${winnerName}" dengan ${highestScore} klik dalam 1 menit!`,
+            timestamp: Date.now(),
+            isSystem: true
+          };
+          db.chatHistory.push(winMsg);
+          if (db.chatHistory.length > 100) db.chatHistory.shift();
+          io.emit('chatMessage', winMsg);
+        } else {
+          io.emit('tournamentEnd', null);
+
+          const winMsg = {
+            id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            username: 'System',
+            message: '⏱️ Turnamen Selesai! Tidak ada pemenang karena tidak ada klik selama turnamen.',
+            timestamp: Date.now(),
+            isSystem: true
+          };
+          db.chatHistory.push(winMsg);
+          if (db.chatHistory.length > 100) db.chatHistory.shift();
+          io.emit('chatMessage', winMsg);
+        }
+      }
+    }, 1000);
   });
 
   // Handle Disconnect
