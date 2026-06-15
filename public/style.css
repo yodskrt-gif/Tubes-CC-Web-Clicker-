@@ -706,17 +706,91 @@ button[type="submit"]#chat-send-btn:active {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 1100px) {
+/* Mobile Navigation Bar */
+.mobile-nav-bar {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .mobile-nav-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: rgba(16, 18, 27, 0.95);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-color);
+    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .nav-tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    height: 100%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .nav-tab-btn.active {
+    color: var(--color-cyan);
+    text-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+  }
+
+  .nav-tab-btn.active .nav-icon {
+    transform: scale(1.15);
+  }
+
+  .nav-icon {
+    font-size: 18px;
+    transition: transform 0.2s ease;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  /* Handle panel visibility on mobile tabs */
   .app-container {
-    height: auto;
-    overflow-y: auto;
+    height: 100vh !important;
+    height: 100dvh !important;
+    width: 100% !important;
+    padding: 10px 10px 70px 10px !important; /* spacing for bottom nav */
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
   }
+
   .app-main {
-    grid-template-columns: 1fr;
-    height: auto;
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+    height: 100% !important;
   }
+
   .panel {
-    height: 480px;
+    display: none !important; /* Hide all panels by default on mobile */
+    height: 100% !important; /* Occupy full container height */
+    border-radius: 16px !important;
+  }
+
+  .panel.active-tab {
+    display: flex !important; /* Show active panel */
+  }
+
+  .game-panel {
+    overflow-y: auto !important; /* Ensure vertical scrolling on small heights */
   }
 }
 
@@ -1483,7 +1557,7 @@ button[type="submit"]#chat-send-btn:active {
 }
 
 /* Responsive query: stack cards vertically on mobile/narrow screens so they do not overlap */
-@media (max-width: 1100px) {
+@media (max-width: 1024px) {
   .game-center-content {
     flex-direction: column;
     gap: 20px;

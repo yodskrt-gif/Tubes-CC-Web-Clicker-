@@ -655,3 +655,41 @@ function escapeHTML(str) {
     }[tag] || tag)
   );
 }
+
+// Mobile Navigation Tab Switcher Logic
+const tabButtons = document.querySelectorAll('.nav-tab-btn');
+const tabPanels = {
+  leaderboard: document.querySelector('.leaderboard-panel'),
+  game: document.querySelector('.game-panel'),
+  chat: document.querySelector('.chat-panel')
+};
+
+// Set initial mobile tab states
+if (window.innerWidth <= 1024) {
+  Object.keys(tabPanels).forEach(key => {
+    if (key === 'game') {
+      tabPanels[key].classList.add('active-tab');
+    } else {
+      tabPanels[key].classList.remove('active-tab');
+    }
+  });
+}
+
+tabButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.getAttribute('data-target');
+    
+    // Toggle active tab buttons
+    tabButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Toggle active panels
+    Object.keys(tabPanels).forEach(key => {
+      if (key === target) {
+        tabPanels[key].classList.add('active-tab');
+      } else {
+        tabPanels[key].classList.remove('active-tab');
+      }
+    });
+  });
+});
