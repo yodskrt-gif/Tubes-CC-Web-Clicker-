@@ -110,6 +110,7 @@ io.on('connection', (socket) => {
 
     // Broadcast system message
     const systemMsg = {
+      id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
       username: 'System',
       message: `${cleanUsername} joined the server!`,
       timestamp: Date.now(),
@@ -143,6 +144,7 @@ io.on('connection', (socket) => {
     if (cleanMsg.length === 0) return;
 
     const chatMsg = {
+      id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
       username,
       message: cleanMsg,
       timestamp: Date.now(),
@@ -156,6 +158,64 @@ io.on('connection', (socket) => {
     io.emit('chatMessage', chatMsg);
   });
 
+  // Handle Chat Unsend (Self)
+  socket.on('unsendMessage', (messageId) => {
+    const username = onlineUsers.get(socket.id);
+    if (!username) return;
+
+    const index = db.chatHistory.findIndex(msg => msg.id === messageId);
+    if (index === -1) return;
+
+    const msg = db.chatHistory[index];
+    // Verify ownership
+    if (msg.username === username) {
+      db.chatHistory.splice(index, 1);
+      isDirty = true;
+      io.emit('messageDeleted', messageId);
+    }
+  });
+
+  // Handle Admin Delete Chat Message
+  socket.on('adminDeleteMessage', ({ messageId, password }) => {
+    if (password !== (process.env.ADMIN_PASSWORD || 'admin123')) {
+      socket.emit('adminError', 'Password admin salah!');
+      return;
+    }
+    const index = db.chatHistory.findIndex(msg => msg.id === messageId);
+    if (index === -1) return;
+
+    db.chatHistory.splice(index, 1);
+    isDirty = true;
+    io.emit('messageDeleted', messageId);
+  });
+
+  // Handle Admin Delete Player Score
+  socket.on('adminDeletePlayer', ({ targetUsername, password }) => {
+    if (password !== (process.env.ADMIN_PASSWORD || 'admin123')) {
+      socket.emit('adminError', 'Password admin salah!');
+      return;
+    }
+    if (db.leaderboard[targetUsername] !== undefined) {
+      delete db.leaderboard[targetUsername];
+      isDirty = true;
+
+      // Broadcast updated leaderboard to all
+      io.emit('leaderboardUpdate', getLeaderboard());
+
+      // Broadcast system log message about the deletion
+      const systemMsg = {
+        id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+        username: 'System',
+        message: `Pemain "${targetUsername}" telah dihapus oleh Admin.`,
+        timestamp: Date.now(),
+        isSystem: true
+      };
+      db.chatHistory.push(systemMsg);
+      if (db.chatHistory.length > 100) db.chatHistory.shift();
+      io.emit('chatMessage', systemMsg);
+    }
+  });
+
   // Handle Disconnect
   socket.on('disconnect', () => {
     const username = onlineUsers.get(socket.id);
@@ -164,6 +224,7 @@ io.on('connection', (socket) => {
       onlineUsers.delete(socket.id);
 
       const systemMsg = {
+        id: 'sys-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
         username: 'System',
         message: `${username} left the server.`,
         timestamp: Date.now(),

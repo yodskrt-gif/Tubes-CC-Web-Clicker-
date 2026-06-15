@@ -718,3 +718,184 @@ button[type="submit"]#chat-send-btn:active {
     height: 480px;
   }
 }
+
+/* Floating Admin Trigger Button */
+.admin-trigger-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 99;
+}
+
+.admin-trigger-btn:hover {
+  color: var(--color-cyan);
+  border-color: var(--border-focus);
+  box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
+  transform: scale(1.08);
+}
+
+.admin-trigger-btn.active {
+  color: var(--color-magenta);
+  border-color: rgba(243, 85, 136, 0.4);
+  box-shadow: 0 4px 20px rgba(243, 85, 136, 0.3);
+}
+
+.admin-trigger-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Modal Buttons & Secondary Button */
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  flex: 1;
+  transition: all var(--transition-speed);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Admin Deletion Action Buttons */
+.admin-delete-btn {
+  background: none;
+  border: none;
+  color: var(--color-magenta);
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity var(--transition-speed), transform var(--transition-speed);
+  margin-left: 8px;
+}
+
+.admin-delete-btn:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.admin-delete-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Chat Unsend Button */
+.chat-msg {
+  position: relative; /* Setup relative position for unsend button binding */
+}
+
+.msg-unsend-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity var(--transition-speed), color var(--transition-speed);
+}
+
+.chat-msg:hover .msg-unsend-btn {
+  opacity: 0.7;
+}
+
+.msg-unsend-btn:hover {
+  opacity: 1 !important;
+  color: var(--color-magenta);
+}
+
+.msg-unsend-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Leaderboard Rank Swap Animations */
+@keyframes rank-flash-gold {
+  0% { background-color: rgba(255, 215, 0, 0.4); box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.5); }
+  100% { background-color: rgba(255, 255, 255, 0.02); }
+}
+
+@keyframes rank-flash-cyan {
+  0% { background-color: rgba(0, 242, 254, 0.4); box-shadow: inset 0 0 10px rgba(0, 242, 254, 0.5); }
+  100% { background-color: rgba(255, 255, 255, 0.02); }
+}
+
+.rank-up-gold {
+  animation: rank-flash-gold 0.8s ease-out;
+}
+
+.rank-up-cyan {
+  animation: rank-flash-cyan 0.8s ease-out;
+}
+
+/* Particle Explosion Burst elements */
+.particle-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 0 10px currentColor;
+  animation: particle-fade 0.8s cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes particle-fade {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Core Shake Juicy Effect */
+.shake-core {
+  animation: shake 0.15s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-3px, 0, 0) scale(1.03); }
+  20%, 80% { transform: translate3d(4px, 0, 0) scale(1.03); }
+  30%, 50%, 70% { transform: translate3d(-5px, 0, 0) scale(1.03); }
+  40%, 60% { transform: translate3d(5px, 0, 0) scale(1.03); }
+}
+
