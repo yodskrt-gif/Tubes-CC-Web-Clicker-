@@ -1361,17 +1361,92 @@ button[type="submit"]#chat-send-btn:active {
   justify-content: center;
 }
 
-/* Float Lobby Card and Timer Card in the Bottom-Right Corner of Game Panel (Desktop) */
+/* Float Lobby Card and Timer Card in the Bottom-Right Corner of Game Panel (Desktop - Extra Compact) */
 .tournament-lobby-card, .tournament-timer-card {
   position: absolute;
-  bottom: 20px;
-  right: 20px;
+  bottom: 15px;
+  right: 15px;
   margin: 0;
   z-index: 100;
-  width: 280px;
-  background: radial-gradient(circle at center, rgba(16, 18, 27, 0.95) 0%, rgba(10, 11, 16, 0.98) 100%) !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(127, 86, 243, 0.25) !important;
-  border-color: rgba(127, 86, 243, 0.4);
+  width: 230px; /* Reduced from 280px */
+  padding: 12px !important; /* Reduced from 20px */
+  border-radius: 12px !important;
+  background: radial-gradient(circle at center, rgba(16, 18, 27, 0.98) 0%, rgba(8, 9, 13, 0.99) 100%) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(127, 86, 243, 0.25) !important;
+  border-color: rgba(127, 86, 243, 0.3);
+}
+
+/* Make Lobby elements compact on desktop */
+.tournament-lobby-card .lobby-countdown {
+  font-size: 24px !important;
+  margin-bottom: 10px !important;
+}
+
+.tournament-lobby-card .lobby-slots {
+  gap: 6px !important;
+  margin-bottom: 12px !important;
+}
+
+.tournament-lobby-card .lobby-slot {
+  padding: 6px 4px !important;
+  min-height: 60px !important;
+  border-radius: 8px !important;
+}
+
+.tournament-lobby-card .slot-number {
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 9px !important;
+  margin-bottom: 4px !important;
+}
+
+.tournament-lobby-card .slot-username {
+  font-size: 9px !important;
+  max-width: 60px !important;
+}
+
+.tournament-lobby-card .btn-join-lobby {
+  font-size: 12px !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+}
+
+/* Make Timer Card elements compact on desktop */
+.tournament-timer-card .timer-countdown {
+  font-size: 24px !important;
+  margin-bottom: 4px !important;
+}
+
+.tournament-timer-card .timer-participant-status {
+  font-size: 10px !important;
+  margin-bottom: 8px !important;
+}
+
+.tournament-timer-card .timer-scores-preview {
+  font-size: 10px !important;
+}
+
+.tournament-timer-card .tournament-live-leaderboard {
+  margin-top: 8px !important;
+  padding-top: 6px !important;
+}
+
+.tournament-timer-card .live-leaderboard-title {
+  font-size: 9px !important;
+  margin-bottom: 4px !important;
+}
+
+.tournament-timer-card #tournament-live-list {
+  gap: 3px !important;
+}
+
+.tournament-timer-card #tournament-live-list li {
+  font-size: 11px !important;
+  padding: 3px 6px !important;
+}
+
+.tournament-timer-card #tournament-live-list li .live-name {
+  max-width: 100px !important;
 }
 
 /* Hide header and footer in game panel when tournament-mode is active (Immersion/Clean view) */
@@ -1393,6 +1468,79 @@ button[type="submit"]#chat-send-btn:active {
     width: 100%;
     max-width: 340px;
     margin: 16px auto;
+    padding: 20px !important; /* Restore normal padding on mobile */
+    border-radius: 16px !important;
+  }
+  
+  .tournament-lobby-card .lobby-countdown {
+    font-size: 40px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .tournament-lobby-card .lobby-slots {
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .tournament-lobby-card .lobby-slot {
+    padding: 10px 6px !important;
+    min-height: 80px !important;
+    border-radius: 12px !important;
+  }
+
+  .tournament-lobby-card .slot-number {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .tournament-lobby-card .slot-username {
+    font-size: 11px !important;
+    max-width: 85px !important;
+  }
+
+  .tournament-lobby-card .btn-join-lobby {
+    font-size: 14px !important;
+    padding: 10px 24px !important;
+    border-radius: 10px !important;
+  }
+
+  .tournament-timer-card .timer-countdown {
+    font-size: 36px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .tournament-timer-card .timer-participant-status {
+    font-size: 11px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .tournament-timer-card .timer-scores-preview {
+    font-size: 11px !important;
+  }
+
+  .tournament-timer-card .tournament-live-leaderboard {
+    margin-top: 14px !important;
+    padding-top: 10px !important;
+  }
+
+  .tournament-timer-card .live-leaderboard-title {
+    font-size: 10px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .tournament-timer-card #tournament-live-list {
+    gap: 4px !important;
+  }
+
+  .tournament-timer-card #tournament-live-list li {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+  }
+
+  .tournament-timer-card #tournament-live-list li .live-name {
+    max-width: 140px !important;
   }
 }
 
