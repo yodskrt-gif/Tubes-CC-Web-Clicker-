@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Clicker | Containerized AWS Game</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background visual assets -->
+    <div class="stars"></div>
+    <div class="glowing-orb"></div>
+    <div class="glowing-orb-purple"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <h1>QUANTUM<span>CORE</span></h1>
+                <p class="subtitle">Dockerized & AWS EC2 Scalable Clicker Game</p>
+            </div>
+            <div class="server-status">
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <span class="status-text">Server Active</span>
+                </div>
+                <div class="online-users">
+                    <span id="user-count">0</span> Nodes Active
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+            <!-- Left Panel: Leaderboard -->
+            <section class="panel leaderboard-panel animate-fade-in">
+                <div class="panel-header">
+                    <h2>Leaderboard</h2>
+                    <span class="badge">TOP 10</span>
+                </div>
+                <div class="panel-body">
+                    <ol id="leaderboard-list">
+                        <!-- Dynamic list items will be injected here -->
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Center Panel: Clicker Game -->
+            <section class="panel game-panel animate-fade-in">
+                <div class="game-info">
+                    <p class="welcome-text">Connected as: <span id="player-display-name">Connecting...</span></p>
+                    <div class="score-container">
+                        <span class="score-label">Quantum Charge</span>
+                        <h2 id="player-score">0</h2>
+                    </div>
+                </div>
+
+                <div class="clicker-area">
+                    <div id="quantum-core" class="quantum-core">
+                        <div class="core-ring"></div>
+                        <div class="core-inner"></div>
+                        <div class="core-glow"></div>
+                    </div>
+                </div>
+
+                <div class="game-footer">
+                    <p>Tap the core to release energy charges and rank up globally!</p>
+                </div>
+            </section>
+
+            <!-- Right Panel: Real-Time Chat -->
+            <section class="panel chat-panel animate-fade-in">
+                <div class="panel-header">
+                    <h2>Quantum Chat</h2>
+                    <span class="badge">REAL-TIME</span>
+                </div>
+                <div class="panel-body chat-body" id="chat-messages">
+                    <!-- Dynamic chat messages will be injected here -->
+                </div>
+                <div class="panel-footer chat-footer">
+                    <form id="chat-form">
+                        <input type="text" id="chat-input" placeholder="Type a message..." maxlength="200" autocomplete="off" required>
+                        <button type="submit" id="chat-send-btn" aria-label="Send message">
+                            <svg viewBox="0 0 24 24" class="send-icon">
+                                <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="username-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Establish Connection</h2>
+            <p>Sync your node with the containerized AWS backend.</p>
+            <form id="username-form">
+                <input type="text" id="username-input" placeholder="Choose username..." minlength="3" maxlength="15" required autocomplete="off">
+                <button type="submit" class="btn-primary">Connect Node</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Socket.io & App Script -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>

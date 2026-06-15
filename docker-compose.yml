@@ -1,0 +1,12 @@
+services:
+  web-clicker:
+    build: .
+    container_name: quantum-clicker-app
+    ports:
+      - "80:3000"
+    volumes:
+      - ./data:/usr/src/app/data
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
