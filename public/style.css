@@ -317,6 +317,7 @@ body {
 
 /* Center Game Panel Specifics */
 .game-panel {
+  position: relative;
   justify-content: space-between;
   background: radial-gradient(circle at center, rgba(127, 86, 243, 0.05) 0%, var(--panel-bg) 100%);
 }
@@ -1343,40 +1344,55 @@ button[type="submit"]#chat-send-btn:active {
   color: #fff;
 }
 
-/* Side-by-side Game Center Content Layout */
+/* Game Center Content Layout */
 .game-center-content {
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 30px;
   flex: 1;
   padding: 10px 20px;
   width: 100%;
 }
 
-/* Adjust tournament card sizes slightly when side-by-side */
-.tournament-lobby-card, .tournament-timer-card {
-  margin: 0;
-  flex-shrink: 0;
-  width: 300px;
-}
-
 .clicker-area {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Responsive query: stack vertically on narrow containers or screens */
+/* Float Lobby Card and Timer Card in the Bottom-Right Corner of Game Panel (Desktop) */
+.tournament-lobby-card, .tournament-timer-card {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  margin: 0;
+  z-index: 100;
+  width: 280px;
+  background: radial-gradient(circle at center, rgba(16, 18, 27, 0.95) 0%, rgba(10, 11, 16, 0.98) 100%) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(127, 86, 243, 0.25) !important;
+  border-color: rgba(127, 86, 243, 0.4);
+}
+
+/* Hide header and footer in game panel when tournament-mode is active (Immersion/Clean view) */
+.game-panel.tournament-mode .game-info,
+.game-panel.tournament-mode .game-footer {
+  display: none !important;
+}
+
+/* Responsive query: stack cards vertically on mobile/narrow screens so they do not overlap */
 @media (max-width: 1100px) {
   .game-center-content {
     flex-direction: column;
     gap: 20px;
     padding: 10px 0;
   }
-  
+
   .tournament-lobby-card, .tournament-timer-card {
+    position: static; /* Let them flow naturally below clicker on mobile */
     width: 100%;
     max-width: 340px;
+    margin: 16px auto;
   }
 }
 

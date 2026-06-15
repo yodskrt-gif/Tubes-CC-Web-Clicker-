@@ -172,6 +172,7 @@ socket.on('init', (data) => {
   // Sync tournament state
   if (data.tournamentState && data.tournamentState.isActive) {
     isTournamentRunning = true;
+    document.querySelector('.game-panel').classList.add('tournament-mode');
     tournamentTimerCard.classList.remove('hidden');
     tournamentCountdown.textContent = `${data.tournamentState.timeLeft}s`;
     
@@ -209,6 +210,7 @@ socket.on('init', (data) => {
     openLobbyBtn.disabled = true;
     openLobbyBtn.textContent = 'Turnamen Sedang Berjalan...';
   } else {
+    document.querySelector('.game-panel').classList.remove('tournament-mode');
     if (!isLobbyActive) {
       tournamentTimerCard.classList.add('hidden');
     }
@@ -303,6 +305,7 @@ socket.on('tournamentError', (err) => {
 socket.on('tournamentStart', (data) => {
   isLobbyActive = false;
   isTournamentRunning = true;
+  document.querySelector('.game-panel').classList.add('tournament-mode');
   myTournamentClicks = 0;
   myTournamentScore.textContent = '0';
 
@@ -381,6 +384,7 @@ function resetTournamentUI() {
   lobbyParticipants = [];
   myTournamentClicks = 0;
 
+  document.querySelector('.game-panel').classList.remove('tournament-mode');
   tournamentLobbyCard.classList.add('hidden');
   tournamentTimerCard.classList.add('hidden');
 
