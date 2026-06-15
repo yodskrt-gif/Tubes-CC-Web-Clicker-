@@ -85,49 +85,51 @@
                     </div>
                 </div>
 
-                <!-- Tournament Lobby Card -->
-                <div id="tournament-lobby-card" class="tournament-lobby-card hidden">
-                    <div class="lobby-badge">LOBBY MATCHMAKING</div>
-                    <div id="lobby-countdown" class="lobby-countdown">15s</div>
-                    <div class="lobby-slots">
-                        <div class="lobby-slot" data-slot="1">
-                            <span class="slot-number">1</span>
-                            <span class="slot-username">Kosong</span>
+                <div class="game-center-content">
+                    <!-- Tournament Lobby Card -->
+                    <div id="tournament-lobby-card" class="tournament-lobby-card hidden">
+                        <div class="lobby-badge">LOBBY MATCHMAKING</div>
+                        <div id="lobby-countdown" class="lobby-countdown">15s</div>
+                        <div class="lobby-slots">
+                            <div class="lobby-slot" data-slot="1">
+                                <span class="slot-number">1</span>
+                                <span class="slot-username">Kosong</span>
+                            </div>
+                            <div class="lobby-slot" data-slot="2">
+                                <span class="slot-number">2</span>
+                                <span class="slot-username">Kosong</span>
+                            </div>
+                            <div class="lobby-slot" data-slot="3">
+                                <span class="slot-number">3</span>
+                                <span class="slot-username">Kosong</span>
+                            </div>
                         </div>
-                        <div class="lobby-slot" data-slot="2">
-                            <span class="slot-number">2</span>
-                            <span class="slot-username">Kosong</span>
-                        </div>
-                        <div class="lobby-slot" data-slot="3">
-                            <span class="slot-number">3</span>
-                            <span class="slot-username">Kosong</span>
-                        </div>
+                        <button id="join-lobby-btn" class="btn-join-lobby">Gabung Turnamen</button>
                     </div>
-                    <button id="join-lobby-btn" class="btn-join-lobby">Gabung Turnamen</button>
-                </div>
 
-                <!-- Tournament Active Countdown Card -->
-                <div id="tournament-timer-card" class="tournament-timer-card hidden">
-                    <div class="timer-badge">TOURNAMENT ACTIVE</div>
-                    <div id="tournament-countdown" class="timer-countdown">60s</div>
-                    <div id="tournament-participant-status" class="timer-participant-status">Menonton Turnamen</div>
-                    <div class="timer-scores-preview">
-                        <span class="score-preview-label">Your Tournament Score: </span>
-                        <span id="my-tournament-score" class="score-preview-val">0</span>
+                    <!-- Tournament Active Countdown Card -->
+                    <div id="tournament-timer-card" class="tournament-timer-card hidden">
+                        <div class="timer-badge">TOURNAMENT ACTIVE</div>
+                        <div id="tournament-countdown" class="timer-countdown">60s</div>
+                        <div id="tournament-participant-status" class="timer-participant-status">Menonton Turnamen</div>
+                        <div class="timer-scores-preview">
+                            <span class="score-preview-label">Your Tournament Score: </span>
+                            <span id="my-tournament-score" class="score-preview-val">0</span>
+                        </div>
+                        <div class="tournament-live-leaderboard">
+                            <div class="live-leaderboard-title">Skor Turnamen Real-Time:</div>
+                            <ul id="tournament-live-list">
+                                <!-- Dynamic real-time participant scores -->
+                            </ul>
+                        </div>
                     </div>
-                    <div class="tournament-live-leaderboard">
-                        <div class="live-leaderboard-title">Skor Turnamen Real-Time:</div>
-                        <ul id="tournament-live-list">
-                            <!-- Dynamic real-time participant scores -->
-                        </ul>
-                    </div>
-                </div>
 
-                <div class="clicker-area">
-                    <div id="quantum-core" class="quantum-core">
-                        <div class="core-ring"></div>
-                        <div class="core-inner"></div>
-                        <div class="core-glow"></div>
+                    <div class="clicker-area">
+                        <div id="quantum-core" class="quantum-core">
+                            <div class="core-ring"></div>
+                            <div class="core-inner"></div>
+                            <div class="core-glow"></div>
+                        </div>
                     </div>
                 </div>
 
